@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | ERP De Oliveira</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-body">
+  <main class="login-page">
+    <section class="login-panel">
+      <div class="login-brand">
+        <div class="login-mark">DO</div>
+        <div>
+          <strong>De Oliveira</strong>
+          <span>ERP Imobiliario</span>
+        </div>
+      </div>
+
+      <div class="login-copy">
+        <h1>Acesse sua operacao</h1>
+        <p>Controle financeiro, vendas e recebimentos em um ambiente seguro e local.</p>
+      </div>
+
+      <form id="login-form" class="login-form">
+        <label>
+          <span>Usuario</span>
+          <input id="username" type="text" autocomplete="username" placeholder="admin" required>
+        </label>
+
+        <label>
+          <span>Senha</span>
+          <input id="password" type="password" autocomplete="current-password" placeholder="Digite sua senha" required>
+        </label>
+
+        <div id="login-error" class="login-error" role="alert"></div>
+        <button id="login-submit" class="login-button" type="submit">Entrar</button>
+      </form>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <script type="module">
+    import { login, redirectIfAuthenticated } from './auth.js';
+
+    redirectIfAuthenticated();
+
+    const form = document.getElementById('login-form');
+    const error = document.getElementById('login-error');
+    const button = document.getElementById('login-submit');
+    const toast = document.getElementById('toast');
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      error.textContent = '';
+      button.classList.add('loading-button');
+      button.textContent = 'Entrando...';
+
+      setTimeout(() => {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (login(username, password)) {
+          toast.textContent = 'Login realizado com sucesso';
+          toast.classList.add('show');
+          setTimeout(() => window.location.replace('index.html'), 450);
+          return;
+        }
+
+        button.classList.remove('loading-button');
+        button.textContent = 'Entrar';
+        error.textContent = 'Usuario ou senha invalidos.';
+      }, 450);
+    });
+  </script>
+</body>
+</html>

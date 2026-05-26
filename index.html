@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR" class="auth-locked">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ERP De Oliveira</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+</head>
+<body>
+  <div id="loading" class="loading">
+    <span></span>
+    <strong>Carregando ERP</strong>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">DO</div>
+      <div>
+        <strong>De Oliveira</strong>
+        <small>ERP Imobiliário</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-section="dashboard">Dashboard</button>
+      <button class="nav-item" data-section="vendas">Vendas</button>
+      <button class="nav-item" data-section="fluxo">Fluxo de Caixa</button>
+      <button class="nav-item" data-section="cartoes">Cartões</button>
+      <button class="nav-item" data-section="aportes">Aportes</button>
+      <button class="nav-item" data-section="cp">Contas a Pagar</button>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button id="menu-toggle" class="icon-button" aria-label="Abrir menu">☰</button>
+      <div class="search">
+        <input id="global-search" type="search" placeholder="Buscar em todo o ERP">
+      </div>
+      <div class="top-actions">
+        <button id="backup-btn" class="ghost-button">Backup</button>
+        <button id="export-pdf-btn" class="primary-button">PDF</button>
+        <button id="logout-btn" class="ghost-button">Sair</button>
+      </div>
+    </header>
+
+    <section id="dashboard" class="page active">
+      <div class="page-head">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Visão executiva de vendas, caixa e compromissos.</p>
+        </div>
+      </div>
+
+      <div id="dashboard-cards" class="metrics-grid"></div>
+      <div id="alerts" class="alerts"></div>
+
+      <div class="content-grid">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Pipeline por status</h2>
+          </div>
+          <div id="pipeline-summary" class="status-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Próximos vencimentos</h2>
+          </div>
+          <div id="due-summary" class="compact-list"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="vendas" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Vendas</h1>
+          <p>Controle comercial com edição, exclusão e filtros avançados.</p>
+        </div>
+        <div class="page-actions">
+          <button class="ghost-button" data-export="vendas">CSV</button>
+          <button class="primary-button" data-create="vendas">Nova venda</button>
+        </div>
+      </div>
+      <div id="vendas-filters" class="filters"></div>
+      <div id="vendas-table" class="table-shell"></div>
+    </section>
+
+    <section id="fluxo" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Fluxo de Caixa</h1>
+          <p>Entradas, saídas e saldo operacional.</p>
+        </div>
+        <div class="page-actions">
+          <button class="ghost-button" data-export="fluxo">CSV</button>
+          <button class="primary-button" data-create="fluxo">Novo lançamento</button>
+        </div>
+      </div>
+      <section class="panel receivables-panel">
+        <div class="panel-head">
+          <h2>Para receber</h2>
+        </div>
+        <div id="receivables-list" class="compact-list"></div>
+      </section>
+      <div id="fluxo-filters" class="filters"></div>
+      <div id="fluxo-table" class="table-shell"></div>
+    </section>
+
+    <section id="cartoes" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Cartões</h1>
+          <p>Gestão de cartões, limites e vencimentos.</p>
+        </div>
+        <div class="page-actions">
+          <button class="ghost-button" data-export="cartoes">CSV</button>
+          <button class="primary-button" data-create="cartoes">Novo cartão</button>
+        </div>
+      </div>
+      <div id="cartoes-filters" class="filters"></div>
+      <div id="cartoes-table" class="table-shell"></div>
+    </section>
+
+    <section id="aportes" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Aportes</h1>
+          <p>Acompanhamento de investimentos e reforços financeiros.</p>
+        </div>
+        <div class="page-actions">
+          <button class="ghost-button" data-export="aportes">CSV</button>
+          <button class="primary-button" data-create="aportes">Novo aporte</button>
+        </div>
+      </div>
+      <div id="aportes-filters" class="filters"></div>
+      <div id="aportes-table" class="table-shell"></div>
+    </section>
+
+    <section id="cp" class="page">
+      <div class="page-head">
+        <div>
+          <h1>Contas a Pagar</h1>
+          <p>Controle de fornecedores, vencimentos e pagamentos.</p>
+        </div>
+        <div class="page-actions">
+          <button class="ghost-button" data-export="cp">CSV</button>
+          <button class="primary-button" data-create="cp">Nova conta</button>
+        </div>
+      </div>
+      <div id="cp-filters" class="filters"></div>
+      <div id="cp-table" class="table-shell"></div>
+    </section>
+  </main>
+
+  <div id="modal-root" class="modal-root" aria-hidden="true"></div>
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
