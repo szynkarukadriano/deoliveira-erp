@@ -38,10 +38,11 @@ export function openEdit(resourceKey, id, onDone) {
 
 export function deleteEntity(resourceKey, id, onDone) {
   const config = resources[resourceKey];
+  const item = getById(resourceKey, id);
   if (!confirmAction(`Deseja realmente excluir este registro de ${config.plural}?`)) return;
   remove(resourceKey, id);
   toast(`${config.title} removido com sucesso`);
-  onDone();
+  onDone(resourceKey, item, 'delete');
 }
 
 function saveEntity(resourceKey, payload, onDone) {
@@ -56,7 +57,7 @@ function saveEntity(resourceKey, payload, onDone) {
   toast(isEditing ? `${config.title} atualizado com sucesso` : `${config.title} criado com sucesso`);
   closeModal();
   resetEditing();
-  onDone();
+  onDone(resourceKey, item, isEditing ? 'update' : 'create');
 }
 
 function normalizePayload(resourceKey, payload) {

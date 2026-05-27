@@ -5,6 +5,8 @@ const fallbackDB = {
   vendas: [],
   fluxo: [],
   cartoes: [],
+  cartaoCompras: [],
+  cartaoFaturas: [],
   aportes: [],
   cp: []
 };
@@ -60,9 +62,29 @@ function migrateDB(db) {
 
   db.cartoes = db.cartoes.map(cartao => ({
     ...cartao,
-    valorGasto: Number(cartao.valorGasto || 0),
-    categoriaGasto: cartao.categoriaGasto || '',
-    descricaoGasto: cartao.descricaoGasto || ''
+    banco: cartao.banco || '',
+    responsavel: cartao.responsavel || '',
+    limiteTotal: Number(cartao.limiteTotal || cartao.limite || 0),
+    melhorDiaCompra: Number(cartao.melhorDiaCompra || 1),
+    diaFechamento: Number(cartao.diaFechamento || 25),
+    diaVencimento: Number(cartao.diaVencimento || extractDay(cartao.vencimento) || 8),
+    status: cartao.status === 'Bloqueado' ? 'Inativo' : cartao.status || 'Ativo'
+  }));
+
+  db.cartaoCompras = (db.cartaoCompras || []).map(compra => ({
+    ...compra,
+    valor: Number(compra.valor || 0),
+    parcelas: Number(compra.parcelas || 1),
+    parcelaAtual: Number(compra.parcelaAtual || 1),
+    cartaoId: Number(compra.cartaoId || 0)
+  }));
+
+  db.cartaoFaturas = (db.cartaoFaturas || []).map(fatura => ({
+    ...fatura,
+    cartaoId: Number(fatura.cartaoId || 0),
+    total: Number(fatura.total || 0),
+    status: fatura.status || 'Aberta',
+    fluxoId: fatura.fluxoId || null
   }));
 
   db.cp = db.cp.map(conta => ({
@@ -71,6 +93,13 @@ function migrateDB(db) {
     dataPagamento: conta.dataPagamento || '',
     valorPago: Number(conta.valorPago || 0),
     fluxoId: conta.fluxoId || null
+  }));
+
+  db.aportes = db.aportes.map(aporte => ({
+    ...aporte,
+    tipoAporte: aporte.tipoAporte || normalizeAporteType(aporte.origem),
+    status: aporte.status === 'Confirmado' ? 'Realizado' : aporte.status,
+    fluxoId: aporte.fluxoId || null
   }));
 
   return db;
@@ -159,7 +188,8 @@ export function seedIfEmpty() {
   DB.fluxo = [
     { id: 201, descricao: 'Comissão recebida', tipo: 'Entrada', categoria: 'Comissões', valor: 32000, data: '2026-05-10', status: 'Pago' },
     { id: 202, descricao: 'Tráfego pago', tipo: 'Saída', categoria: 'Marketing', valor: 4200, data: '2026-05-18', status: 'Pago' },
-    { id: 203, descricao: 'Comissao imobiliaria recebida - Rafael Lima / Jardins Office', tipo: 'Entrada', categoria: 'Vendas', valor: 39000, data: '2026-05-30', status: 'Pago', vendaId: 102 }
+    { id: 203, descricao: 'Comissao imobiliaria recebida - Rafael Lima / Jardins Office', tipo: 'Entrada', categoria: 'Vendas', valor: 39000, data: '2026-05-30', status: 'Pago', vendaId: 102 },
+    { id: 204, descricao: 'Aporte - Socios', tipo: 'Entrada', categoria: 'Aportes', valor: 60000, data: '2026-05-05', status: 'Realizado', origem: 'aporte', origemId: 401, aporteId: 401 }
   ];
 
   DB.cartoes = [
@@ -167,18 +197,45 @@ export function seedIfEmpty() {
       id: 301,
       nome: 'Cartao Operacional',
       bandeira: 'Visa',
-      limite: 25000,
-      valorGasto: 4200,
-      categoriaGasto: 'Marketing',
-      descricaoGasto: 'Campanhas de trafego pago para captacao de leads',
-      vencimento: '2026-06-08',
+      banco: 'Banco Principal',
+      responsavel: 'Administrativo',
+      limiteTotal: 25000,
+      melhorDiaCompra: 9,
+      diaFechamento: 25,
+      diaVencimento: 8,
       status: 'Ativo',
       obs: 'Uso administrativo'
     }
   ];
 
+  DB.cartaoCompras = [
+    {
+      id: 601,
+      cartaoId: 301,
+      dataCompra: '2026-05-18',
+      descricao: 'Campanhas de trafego pago',
+      categoria: 'Marketing',
+      valor: 4200,
+      parcelas: 1,
+      parcelaAtual: 1,
+      obs: 'Captacao de leads'
+    }
+  ];
+
+  DB.cartaoFaturas = [];
+
   DB.aportes = [
-    { id: 401, investidor: 'Sócios', origem: 'Capital próprio', valor: 60000, data: '2026-05-05', status: 'Confirmado', obs: 'Reserva de caixa' }
+    {
+      id: 401,
+      investidor: 'Socios',
+      tipoAporte: 'Aporte',
+      origem: 'Capital proprio',
+      valor: 60000,
+      data: '2026-05-05',
+      status: 'Realizado',
+      fluxoId: 204,
+      obs: 'Reserva de caixa'
+    }
   ];
 
   DB.cp = [
@@ -206,6 +263,12 @@ function roundMoney(value) {
   return Math.round(Number(value || 0) * 100) / 100;
 }
 
+function extractDay(value) {
+  if (!value) return null;
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? null : date.getDate();
+}
+
 function migrateVendaStatus(status) {
   const map = {
     Novo: 'Em negociacao',
@@ -217,4 +280,11 @@ function migrateVendaStatus(status) {
   };
 
   return map[status] || status || 'Em negociacao';
+}
+
+function normalizeAporteType(origem = '') {
+  const text = String(origem).toLowerCase();
+  if (text.includes('emprest')) return 'Emprestimo recebido';
+  if (text.includes('adiant')) return 'Adiantamento pago para corretor';
+  return 'Aporte';
 }

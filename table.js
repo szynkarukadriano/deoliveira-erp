@@ -3,6 +3,7 @@ import { badgeClass, currency, dateBR, escapeHTML, matchesSearch, normalize } fr
 export function buildFilters(resourceKey, config, items, state, onChange) {
   const host = document.getElementById(`${resourceKey}-filters`);
   const statusValues = unique(items.map(item => item.status).filter(Boolean));
+  const categoryValues = unique(items.map(item => item.categoria).filter(Boolean));
 
   host.innerHTML = `
     <label class="filter-field">
@@ -24,12 +25,19 @@ export function buildFilters(resourceKey, config, items, state, onChange) {
       <span>Data final</span>
       <input type="date" data-filter="to" value="${escapeHTML(state.to || '')}">
     </label>
+    ${resourceKey === 'fluxo' ? fluxoExtraFilters(state, categoryValues) : ''}
   `;
 
   host.querySelectorAll('[data-filter]').forEach(input => {
     input.addEventListener('input', () => {
       state[input.dataset.filter] = input.value;
       onChange(resourceKey, input.dataset.filter);
+    });
+  });
+  host.querySelectorAll('[data-category-value]').forEach(button => {
+    button.addEventListener('click', () => {
+      state.category = button.dataset.categoryValue;
+      onChange(resourceKey, 'category');
     });
   });
 }
@@ -39,9 +47,23 @@ export function applyFilters(items, config, state, globalTerm = '') {
     const dateValue = config.dateField ? item[config.dateField] : null;
     const queryOk = matchesSearch(item, state.query || '') && matchesSearch(item, globalTerm || '');
     const statusOk = !state.status || item.status === state.status;
+    const categoryOk = !state.category || item.categoria === state.category;
+    const itemType = item.tipo === 'Saída' ? 'Saida' : item.tipo;
+    const typeOk = !state.tipo || itemType === state.tipo;
     const fromOk = !state.from || !dateValue || dateValue >= state.from;
     const toOk = !state.to || !dateValue || dateValue <= state.to;
-    return queryOk && statusOk && fromOk && toOk;
+    return queryOk && statusOk && categoryOk && typeOk && fromOk && toOk;
+  });
+}
+
+export function sortByDate(items, direction = 'asc') {
+  const factor = direction === 'desc' ? -1 : 1;
+  return [...items].sort((a, b) => {
+    const dateA = String(a.data || a.dtPrev || a.vencimento || '');
+    const dateB = String(b.data || b.dtPrev || b.vencimento || '');
+    const dateCompare = dateA.localeCompare(dateB) * factor;
+    if (dateCompare !== 0) return dateCompare;
+    return Number(a.id || 0) - Number(b.id || 0);
   });
 }
 
@@ -121,4 +143,33 @@ function formatCell(value, format) {
 
 function unique(values) {
   return [...new Set(values)].sort((a, b) => normalize(a).localeCompare(normalize(b)));
+}
+
+function fluxoExtraFilters(state, categories) {
+  return `
+    <label class="filter-field">
+      <span>Tipo</span>
+      <select data-filter="tipo">
+        <option value="">Todos</option>
+        <option value="Entrada" ${state.tipo === 'Entrada' ? 'selected' : ''}>Entradas</option>
+        <option value="Saida" ${state.tipo === 'Saida' ? 'selected' : ''}>Saidas</option>
+      </select>
+    </label>
+    <label class="filter-field">
+      <span>Ordem</span>
+      <select data-filter="sort">
+        <option value="asc" ${(state.sort || 'asc') === 'asc' ? 'selected' : ''}>Mais antigo primeiro</option>
+        <option value="desc" ${state.sort === 'desc' ? 'selected' : ''}>Mais recente primeiro</option>
+      </select>
+    </label>
+    <div class="filter-field full-filter">
+      <span>Categoria</span>
+      <div class="category-filter">
+        <button type="button" class="${!state.category ? 'active' : ''}" data-category-value="">Todas</button>
+        ${categories.map(category => `
+          <button type="button" class="${state.category === category ? 'active' : ''}" data-category-value="${escapeHTML(category)}">${escapeHTML(category)}</button>
+        `).join('')}
+      </div>
+    </div>
+  `;
 }

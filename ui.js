@@ -88,9 +88,13 @@ function fieldTemplate(values) {
           <span>${escapeHTML(field.label)}</span>
           <select name="${field.name}" ${required}>
             <option value="">Selecione</option>
-            ${field.options.map(option => `
-              <option value="${escapeHTML(option)}" ${option === value ? 'selected' : ''}>${escapeHTML(option)}</option>
-            `).join('')}
+            ${field.options.map(option => {
+              const optionValue = typeof option === 'object' ? option.value : option;
+              const optionLabel = typeof option === 'object' ? option.label : option;
+              return `
+              <option value="${escapeHTML(optionValue)}" ${String(optionValue) === String(value) ? 'selected' : ''}>${escapeHTML(optionLabel)}</option>
+            `;
+            }).join('')}
           </select>
         </label>
       `;

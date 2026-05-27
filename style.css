@@ -487,6 +487,69 @@ h2 {
   margin-top: 10px;
 }
 
+.cartoes-summary {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.cards-panel {
+  margin-bottom: 14px;
+}
+
+.cards-grid,
+.invoice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card-account,
+.invoice-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+  padding: 14px;
+}
+
+.card-account-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.card-account-head strong {
+  display: block;
+}
+
+.card-account-head small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.card-account-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.card-account-grid span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.card-account-grid strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.invoice-card .row-actions {
+  margin-top: 12px;
+}
+
 .panel {
   padding: 18px;
 }
@@ -546,6 +609,38 @@ h2 {
   gap: 12px;
   margin-bottom: 14px;
   padding: 14px;
+}
+
+.full-filter {
+  grid-column: 1 / -1;
+}
+
+.category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-filter button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 7px 12px;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.category-filter button:hover,
+.category-filter button.active {
+  border-color: var(--primary);
+  background: #e8f1fb;
+  color: var(--primary-2);
+  transform: translateY(-1px);
+}
+
+.fluxo-summary {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .filter-field,
@@ -716,6 +811,16 @@ tr:hover td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .fluxo-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cartoes-summary,
+  .cards-grid,
+  .invoice-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .content-grid {
     grid-template-columns: 1fr;
   }
@@ -753,6 +858,10 @@ tr:hover td {
 
   .metrics-grid,
   .filters,
+  .fluxo-summary,
+  .cartoes-summary,
+  .cards-grid,
+  .invoice-grid,
   .modal-form,
   .status-grid {
     grid-template-columns: 1fr;

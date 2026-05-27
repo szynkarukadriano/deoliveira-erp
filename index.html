@@ -99,6 +99,7 @@
           <button class="primary-button" data-create="fluxo">Novo lançamento</button>
         </div>
       </div>
+      <div id="fluxo-summary" class="metrics-grid fluxo-summary"></div>
       <section class="panel receivables-panel">
         <div class="panel-head">
           <h2>Para receber</h2>
@@ -117,11 +118,25 @@
         </div>
         <div class="page-actions">
           <button class="ghost-button" data-export="cartoes">CSV</button>
+          <button class="ghost-button" id="nova-compra-cartao">Nova compra</button>
           <button class="primary-button" data-create="cartoes">Novo cartão</button>
         </div>
       </div>
-      <div id="cartoes-filters" class="filters"></div>
-      <div id="cartoes-table" class="table-shell"></div>
+      <div id="cartoes-summary" class="metrics-grid cartoes-summary"></div>
+      <section class="panel cards-panel">
+        <div class="panel-head">
+          <h2>Cartões cadastrados</h2>
+        </div>
+        <div id="cartoes-card-list" class="cards-grid"></div>
+      </section>
+      <section class="panel cards-panel">
+        <div class="panel-head">
+          <h2>Faturas e compras</h2>
+        </div>
+        <div id="cartoes-filters" class="filters"></div>
+        <div id="cartoes-invoices"></div>
+        <div id="cartoes-table" class="table-shell"></div>
+      </section>
     </section>
 
     <section id="aportes" class="page">
