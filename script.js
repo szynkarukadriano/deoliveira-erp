@@ -2,7 +2,7 @@ import { resources } from './dataConfig.js';
 import { logout, requireAuth } from './auth.js';
 import { renderDashboard, financialAlerts } from './dashboard.js';
 import { exportCSV, exportPDF } from './export.js';
-import { backupERP, DB, persist, remove as removeRecord, seedIfEmpty, upsert } from './storage.js';
+import { backupERP, DB, STORAGE_KEY, persist, remove as removeRecord, seedIfEmpty, upsert } from './storage.js';
 import { applyFilters, buildFilters, renderTable, sortByDate } from './table.js';
 import { openCreate, openEdit, deleteEntity } from './crud.js';
 import { closeModal, openModal, setLoading, toast } from './ui.js';
@@ -62,6 +62,12 @@ function bindActions() {
     toast('Backup local atualizado');
   });
 
+  document.getElementById('export-backup-btn').addEventListener('click', exportBackupJSON);
+  document.getElementById('import-backup-btn').addEventListener('click', () => {
+    document.getElementById('import-backup-file').click();
+  });
+  document.getElementById('import-backup-file').addEventListener('change', importBackupJSON);
+
   document.getElementById('logout-btn').addEventListener('click', logout);
 
   document.getElementById('export-pdf-btn').addEventListener('click', async () => {
@@ -82,6 +88,79 @@ function bindActions() {
       toast(exported ? 'CSV exportado com sucesso' : 'Não há dados para exportar');
     });
   });
+}
+
+function exportBackupJSON() {
+  try {
+    const localStorageData = {};
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      localStorageData[key] = localStorage.getItem(key);
+    }
+
+    const backup = {
+      app: 'ERP De Oliveira',
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      localStorage: localStorageData
+    };
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: 'application/json;charset=utf-8'
+    });
+    const link = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    link.href = URL.createObjectURL(blob);
+    link.download = `backup-erp-de-oliveira-${date}.json`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    toast('Backup exportado com sucesso');
+  } catch {
+    toast('Erro ao exportar backup');
+  }
+}
+
+function importBackupJSON(event) {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const backup = JSON.parse(String(reader.result || '{}'));
+      const data = backup.localStorage || backup;
+
+      if (!data || typeof data !== 'object' || !data[STORAGE_KEY]) {
+        toast('Arquivo de backup invalido');
+        return;
+      }
+
+      const parsedDB = JSON.parse(data[STORAGE_KEY]);
+      if (!parsedDB || typeof parsedDB !== 'object') {
+        toast('Backup sem dados validos do ERP');
+        return;
+      }
+
+      const confirmed = window.confirm('Importar este backup vai substituir os dados atuais deste navegador. Deseja continuar?');
+      if (!confirmed) {
+        toast('Importacao cancelada');
+        return;
+      }
+
+      localStorage.clear();
+      Object.entries(data).forEach(([key, value]) => {
+        localStorage.setItem(key, String(value));
+      });
+
+      toast('Backup importado com sucesso');
+      setTimeout(() => window.location.reload(), 700);
+    } catch {
+      toast('Erro ao importar backup');
+    }
+  };
+  reader.onerror = () => toast('Erro ao ler arquivo de backup');
+  reader.readAsText(file);
 }
 
 function showSection(sectionId) {
