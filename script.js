@@ -226,7 +226,11 @@ function renderCardList(invoices) {
             <strong>${escapeHTML(card.nome)}</strong>
             <small>${escapeHTML(card.bandeira || '-')} - ${escapeHTML(card.banco || '-')}</small>
           </div>
-          <span class="badge ${card.status === 'Ativo' ? 'success' : 'warning'}">${escapeHTML(card.status)}</span>
+          <div class="card-actions">
+            <span class="badge ${card.status === 'Ativo' ? 'success' : 'warning'}">${escapeHTML(card.status)}</span>
+            <button class="ghost-button" data-edit-card="${card.id}">Editar</button>
+            <button class="danger-button" data-delete-card="${card.id}">Excluir</button>
+          </div>
         </div>
         <div class="card-account-grid">
           <span>Limite <strong>${currency(card.limiteTotal)}</strong></span>
@@ -239,6 +243,14 @@ function renderCardList(invoices) {
       </article>
     `;
   }).join('');
+
+  host.querySelectorAll('[data-edit-card]').forEach(button => {
+    button.addEventListener('click', () => openEdit('cartoes', Number(button.dataset.editCard), handleEntityChange));
+  });
+
+  host.querySelectorAll('[data-delete-card]').forEach(button => {
+    button.addEventListener('click', () => deleteCardFromCard(Number(button.dataset.deleteCard)));
+  });
 }
 
 function renderInvoices(invoices) {
@@ -927,6 +939,42 @@ function syncCartaoAfterChange(cartao, action) {
   }
 
   syncPaidCardInvoices(getCardInvoices());
+}
+
+function deleteCardFromCard(id) {
+  const card = DB.cartoes.find(item => item.id === id);
+  if (!card) return;
+
+  const invoices = getCardInvoices().filter(invoice => invoice.cartaoId === id);
+  const openInvoices = invoices.filter(invoice => invoice.status !== 'Paga');
+  const pendingPayments = DB.cp.filter(conta => Number(conta.cartaoId) === id && conta.status !== 'Pago');
+
+  if (openInvoices.length || pendingPayments.length) {
+    toast('Nao e possivel excluir: ha fatura aberta ou pagamento pendente neste cartao');
+    window.alert('Nao e possivel excluir este cartao enquanto houver fatura aberta, fechada, atrasada ou pagamento pendente vinculado.');
+    return;
+  }
+
+  if (!window.confirm(`Deseja excluir o cartao ${card.nome}? Compras, faturas pagas e lancamentos automaticos vinculados tambem serao removidos.`)) return;
+
+  DB.cartaoCompras
+    .filter(compra => Number(compra.cartaoId) === id)
+    .forEach(compra => removeRecord('cartaoCompras', compra.id));
+
+  DB.cartaoFaturas
+    .filter(fatura => Number(fatura.cartaoId) === id)
+    .forEach(fatura => {
+      removeAutoFlow('cartao', fatura.id);
+      removeRecord('cartaoFaturas', fatura.id);
+    });
+
+  DB.fluxo
+    .filter(item => item.origem === 'cartao' && Number(item.cartaoId) === id)
+    .forEach(item => removeRecord('fluxo', item.id));
+
+  removeRecord('cartoes', id);
+  renderAll();
+  toast('Cartao excluido com sucesso');
 }
 
 function getCardName(id) {

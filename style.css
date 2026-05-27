@@ -508,6 +508,14 @@ h2 {
   border-radius: 8px;
   background: #fbfcfd;
   padding: 14px;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.card-account:hover,
+.invoice-card:hover {
+  border-color: rgba(21, 79, 143, .28);
+  box-shadow: 0 18px 42px rgba(23, 32, 51, .1);
+  transform: translateY(-2px);
 }
 
 .card-account-head {
@@ -526,6 +534,21 @@ h2 {
   display: block;
   margin-top: 4px;
   color: var(--muted);
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.card-actions .ghost-button,
+.card-actions .danger-button {
+  min-height: 32px;
+  padding: 6px 9px;
+  font-size: 12px;
 }
 
 .card-account-grid {
