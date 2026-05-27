@@ -1,5 +1,8 @@
+import { deleteRemoteRecord, loadRemoteDB, syncLocalToRemote, upsertRemoteRecord } from './supabase.js';
+
 export const STORAGE_KEY = 'deoliveira_erp_v2';
 export const BACKUP_KEY = 'backup_deoliveira';
+export const PENDING_SUPABASE_SYNC_KEY = 'pending_supabase_sync';
 
 const fallbackDB = {
   vendas: [],
@@ -8,7 +11,8 @@ const fallbackDB = {
   cartaoCompras: [],
   cartaoFaturas: [],
   aportes: [],
-  cp: []
+  cp: [],
+  configuracoes: []
 };
 
 export let DB = loadDB();
@@ -121,6 +125,26 @@ export function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
 }
 
+export async function initRemoteStorage() {
+  const shouldPushLocal = localStorage.getItem(PENDING_SUPABASE_SYNC_KEY) === 'true';
+
+  if (shouldPushLocal) {
+    await syncLocalToRemote(DB);
+    localStorage.removeItem(PENDING_SUPABASE_SYNC_KEY);
+  }
+
+  const remoteDB = await loadRemoteDB();
+  Object.keys(fallbackDB).forEach(collection => {
+    DB[collection] = remoteDB[collection] || [];
+  });
+  DB = migrateDB({ ...fallbackDB, ...DB });
+  persist();
+}
+
+export function markPendingSupabaseSync() {
+  localStorage.setItem(PENDING_SUPABASE_SYNC_KEY, 'true');
+}
+
 export function backupERP() {
   localStorage.setItem(BACKUP_KEY, JSON.stringify({
     createdAt: new Date().toISOString(),
@@ -136,11 +160,13 @@ export function upsert(collection, item) {
     DB[collection].push(item);
   }
   persist();
+  upsertRemoteRecord(collection, item).catch(error => console.warn('Supabase upsert failed', error));
 }
 
 export function remove(collection, id) {
   DB[collection] = DB[collection].filter(record => record.id !== id);
   persist();
+  deleteRemoteRecord(collection, id).catch(error => console.warn('Supabase delete failed', error));
 }
 
 export function getById(collection, id) {

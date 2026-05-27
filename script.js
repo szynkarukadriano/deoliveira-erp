@@ -2,7 +2,8 @@ import { resources } from './dataConfig.js';
 import { logout, requireAuth } from './auth.js';
 import { renderDashboard, financialAlerts } from './dashboard.js';
 import { exportCSV, exportPDF } from './export.js';
-import { backupERP, DB, STORAGE_KEY, persist, remove as removeRecord, seedIfEmpty, upsert } from './storage.js';
+import { backupERP, DB, STORAGE_KEY, initRemoteStorage, markPendingSupabaseSync, persist, remove as removeRecord, seedIfEmpty, upsert } from './storage.js';
+import { loadRemoteDB, subscribeRemoteChanges } from './supabase.js';
 import { applyFilters, buildFilters, renderTable, sortByDate } from './table.js';
 import { openCreate, openEdit, deleteEntity } from './crud.js';
 import { closeModal, openModal, setLoading, toast } from './ui.js';
@@ -30,20 +31,47 @@ const cartoesState = {
 let globalTerm = '';
 let pendingFocus = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (!requireAuth()) return;
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!(await requireAuth())) return;
+
+  try {
+    await initRemoteStorage();
+  } catch (error) {
+    console.warn('Supabase load failed', error);
+    toast('Nao foi possivel carregar dados online. Usando cache local.');
+  }
 
   seedIfEmpty();
   syncAutomaticFlows();
   bindNavigation();
   bindActions();
   renderAll();
+  bindRemoteRealtime();
   setLoading(false);
 
   if (financialAlerts()) {
     toast('Atenção: caixa negativo');
   }
 });
+
+function bindRemoteRealtime() {
+  let timeout;
+  subscribeRemoteChanges(() => {
+    clearTimeout(timeout);
+    timeout = setTimeout(async () => {
+      try {
+        const remoteDB = await loadRemoteDB();
+        Object.keys(remoteDB).forEach(collection => {
+          DB[collection] = remoteDB[collection] || [];
+        });
+        persist();
+        renderAll();
+      } catch (error) {
+        console.warn('Supabase realtime refresh failed', error);
+      }
+    }, 500);
+  });
+}
 
 function bindNavigation() {
   document.querySelectorAll('.nav-item').forEach(button => {
@@ -95,6 +123,7 @@ function exportBackupJSON() {
     const localStorageData = {};
     for (let index = 0; index < localStorage.length; index += 1) {
       const key = localStorage.key(index);
+      if (key?.startsWith('sb-')) continue;
       localStorageData[key] = localStorage.getItem(key);
     }
 
@@ -148,10 +177,23 @@ function importBackupJSON(event) {
         return;
       }
 
+      const preservedAuth = {};
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (key?.startsWith('sb-')) {
+          preservedAuth[key] = localStorage.getItem(key);
+        }
+      }
+
       localStorage.clear();
+      Object.entries(preservedAuth).forEach(([key, value]) => {
+        localStorage.setItem(key, value);
+      });
       Object.entries(data).forEach(([key, value]) => {
+        if (key.startsWith('sb-')) return;
         localStorage.setItem(key, String(value));
       });
+      markPendingSupabaseSync();
 
       toast('Backup importado com sucesso');
       setTimeout(() => window.location.reload(), 700);

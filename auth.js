@@ -1,13 +1,16 @@
-const AUTH_KEY = 'auth';
-const USER = 'admin';
-const PASSWORD = 'deoliveira123';
+import { getSession, signIn, signOut } from './supabase.js';
 
-export function isAuthenticated() {
-  return localStorage.getItem(AUTH_KEY) === 'true';
+const AUTH_KEY = 'auth';
+
+export async function isAuthenticated() {
+  const session = await getSession();
+  const authenticated = Boolean(session);
+  localStorage.setItem(AUTH_KEY, authenticated ? 'true' : 'false');
+  return authenticated;
 }
 
-export function requireAuth() {
-  if (!isAuthenticated()) {
+export async function requireAuth() {
+  if (!(await isAuthenticated())) {
     window.location.replace('login.html');
     return false;
   }
@@ -16,22 +19,21 @@ export function requireAuth() {
   return true;
 }
 
-export function login(username, password) {
-  const isValid = username === USER && password === PASSWORD;
-  if (isValid) {
-    localStorage.setItem(AUTH_KEY, 'true');
-  }
-
-  return isValid;
+export async function login(username, password) {
+  const { error } = await signIn(username, password);
+  if (error) return { ok: false, message: 'Usuario ou senha invalidos.' };
+  localStorage.setItem(AUTH_KEY, 'true');
+  return { ok: true };
 }
 
-export function logout() {
+export async function logout() {
+  await signOut();
   localStorage.removeItem(AUTH_KEY);
   window.location.replace('login.html');
 }
 
-export function redirectIfAuthenticated() {
-  if (isAuthenticated()) {
+export async function redirectIfAuthenticated() {
+  if (await isAuthenticated()) {
     window.location.replace('index.html');
   }
 }

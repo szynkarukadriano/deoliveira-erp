@@ -24,7 +24,7 @@
 
       <form id="login-form" class="login-form">
         <label>
-          <span>Usuario</span>
+          <span>Usuario ou e-mail</span>
           <input id="username" type="text" autocomplete="username" placeholder="admin" required>
         </label>
 
@@ -43,7 +43,7 @@
   <script type="module">
     import { login, redirectIfAuthenticated } from './auth.js';
 
-    redirectIfAuthenticated();
+    await redirectIfAuthenticated();
 
     const form = document.getElementById('login-form');
     const error = document.getElementById('login-error');
@@ -56,11 +56,12 @@
       button.classList.add('loading-button');
       button.textContent = 'Entrando...';
 
-      setTimeout(() => {
+      setTimeout(async () => {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
 
-        if (login(username, password)) {
+        const result = await login(username, password);
+        if (result.ok) {
           toast.textContent = 'Login realizado com sucesso';
           toast.classList.add('show');
           setTimeout(() => window.location.replace('index.html'), 450);
@@ -69,7 +70,7 @@
 
         button.classList.remove('loading-button');
         button.textContent = 'Entrar';
-        error.textContent = 'Usuario ou senha invalidos.';
+        error.textContent = result.message || 'Usuario ou senha invalidos.';
       }, 450);
     });
   </script>
