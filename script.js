@@ -14,7 +14,7 @@ import { renderAportes } from './aportes.js';
 import { renderContasPagar } from './cp.js';
 
 const filters = Object.keys(resources).reduce((acc, key) => {
-  acc[key] = { query: '', status: '', from: '', to: '', category: '', tipo: '', sort: 'asc' };
+  acc[key] = { query: '', status: '', from: '', to: '', category: '', tipo: '', sort: 'asc', formaPagamento: '' };
   return acc;
 }, {});
 
@@ -408,8 +408,10 @@ function renderFluxoSummary(items, state) {
     state.category ? `categoria: ${state.category}` : '',
     state.tipo ? `tipo: ${state.tipo}` : '',
     state.status ? `status: ${state.status}` : '',
+    state.formaPagamento ? `forma: ${state.formaPagamento}` : '',
     state.query ? 'pesquisa' : ''
   ].filter(Boolean).join(' / ') || 'todos os lancamentos visiveis';
+  const byPayment = paymentMethodTotals(items);
 
   host.innerHTML = `
     ${summaryCard('Entradas', currency(entradas), 'Total filtrado de entradas')}
@@ -417,6 +419,7 @@ function renderFluxoSummary(items, state) {
     ${summaryCard('Saldo final', currency(saldo), 'Entradas menos saidas filtradas')}
     ${summaryCard('Total em conta', currency(totalConta), 'Saldo geral do fluxo')}
     ${summaryCard('Total filtrado', currency(entradas + saidas), labelFiltro)}
+    ${byPayment.map(item => summaryCard(`Pago por ${item.label}`, currency(item.total), 'Saidas filtradas')).join('')}
   `;
 }
 
@@ -428,6 +431,20 @@ function summaryCard(label, value, helper) {
       <small>${escapeHTML(helper)}</small>
     </article>
   `;
+}
+
+function paymentMethodTotals(items) {
+  const totals = items
+    .filter(item => item.tipo === 'Saida' || item.tipo === 'Saída')
+    .reduce((acc, item) => {
+      const key = item.formaPagamento || 'Nao informado';
+      acc[key] = (acc[key] || 0) + Number(item.valor || 0);
+      return acc;
+    }, {});
+
+  return Object.entries(totals)
+    .map(([label, total]) => ({ label, total }))
+    .sort((a, b) => b.total - a.total);
 }
 
 function renderReceivables() {
@@ -495,6 +512,8 @@ function receiveSale(venda, payload) {
     valor: valorRecebido,
     data: dataRecebimento,
     status: 'Pago',
+    formaPagamento: payload.formaPagamento || '',
+    contaUtilizada: payload.contaUtilizada || '',
     vendaId: venda.id,
     origem: 'venda',
     origemId: venda.id
@@ -575,6 +594,8 @@ function syncAporteFlow(aporte, action) {
     valor: Number(aporte.valor || 0),
     data: aporte.data || todayISO(),
     status: 'Realizado',
+    formaPagamento: aporte.formaPagamento || '',
+    contaUtilizada: aporte.contaUtilizada || '',
     origem: 'aporte',
     origemId: aporte.id,
     aporteId: aporte.id
@@ -588,6 +609,11 @@ function syncContaPagarFlow(conta, action) {
   const isPaid = conta.status === 'Pago' || conta.pago;
 
   if (action === 'delete' || !isPaid) {
+    removeAutoFlow('conta_pagar', conta.id);
+    return;
+  }
+
+  if (!conta.formaPagamento || !conta.contaUtilizada || !conta.dataPagamento) {
     removeAutoFlow('conta_pagar', conta.id);
     return;
   }
@@ -607,6 +633,8 @@ function syncContaPagarFlow(conta, action) {
     valor: Number(conta.valorPago || conta.valor || 0),
     data,
     status: 'Pago',
+    formaPagamento: conta.formaPagamento || '',
+    contaUtilizada: conta.contaUtilizada || '',
     origem: 'conta_pagar',
     origemId: conta.id,
     contaPagarId: conta.id,
@@ -645,11 +673,15 @@ function openPayBill(id) {
     title: 'Registrar pagamento',
     fields: [
       { name: 'dataPagamento', label: 'Data do pagamento', type: 'date', required: true },
-      { name: 'valorPago', label: 'Valor pago', type: 'number', required: true }
+      { name: 'valorPago', label: 'Valor pago', type: 'number', required: true },
+      { name: 'formaPagamento', label: 'Forma de pagamento', type: 'select', options: ['Pix', 'Transferencia', 'Dinheiro', 'Cartao', 'Boleto', 'Debito automatico', 'Outro'], required: true },
+      { name: 'contaUtilizada', label: 'Conta utilizada', type: 'text', required: true }
     ],
     values: {
       dataPagamento: conta.dataPagamento || todayISO(),
-      valorPago: conta.valor || 0
+      valorPago: conta.valor || 0,
+      formaPagamento: conta.formaPagamento || '',
+      contaUtilizada: conta.contaUtilizada || ''
     },
     onSubmit: payload => payBill(conta, payload)
   });
@@ -659,11 +691,15 @@ function payBill(conta, payload) {
   const fluxoId = conta.fluxoId || generateId();
   const valorPago = Number(payload.valorPago || conta.valor || 0);
   const dataPagamento = payload.dataPagamento || todayISO();
+  const formaPagamento = payload.formaPagamento || '';
+  const contaUtilizada = payload.contaUtilizada || '';
 
   conta.status = 'Pago';
   conta.pago = true;
   conta.dataPagamento = dataPagamento;
   conta.valorPago = valorPago;
+  conta.formaPagamento = formaPagamento;
+  conta.contaUtilizada = contaUtilizada;
   conta.fluxoId = fluxoId;
 
   upsert('fluxo', {
@@ -674,6 +710,8 @@ function payBill(conta, payload) {
     valor: valorPago,
     data: dataPagamento,
     status: 'Pago',
+    formaPagamento,
+    contaUtilizada,
     origem: 'conta_pagar',
     origemId: conta.id,
     contaPagarId: conta.id,
@@ -838,11 +876,15 @@ function openPayCardInvoice(invoiceId) {
     title: 'Pagar fatura',
     fields: [
       { name: 'dataPagamento', label: 'Data do pagamento', type: 'date', required: true },
-      { name: 'valorPago', label: 'Valor pago', type: 'number', required: true }
+      { name: 'valorPago', label: 'Valor pago', type: 'number', required: true },
+      { name: 'formaPagamento', label: 'Forma de pagamento', type: 'select', options: ['Pix', 'Transferencia', 'Dinheiro', 'Cartao', 'Boleto', 'Debito automatico', 'Outro'], required: true },
+      { name: 'contaUtilizada', label: 'Conta utilizada', type: 'text', required: true }
     ],
     values: {
       dataPagamento: todayISO(),
-      valorPago: invoice.total
+      valorPago: invoice.total,
+      formaPagamento: '',
+      contaUtilizada: ''
     },
     onSubmit: payload => payCardInvoice(invoice, payload)
   });
@@ -853,6 +895,8 @@ function payCardInvoice(invoice, payload) {
   const fluxoId = stored.fluxoId || generateId();
   const dataPagamento = payload.dataPagamento || todayISO();
   const total = Number(payload.valorPago || invoice.total || 0);
+  const formaPagamento = payload.formaPagamento || '';
+  const contaUtilizada = payload.contaUtilizada || '';
 
   upsert('cartaoFaturas', {
     id: invoice.id,
@@ -861,6 +905,8 @@ function payCardInvoice(invoice, payload) {
     total,
     status: 'Paga',
     dataPagamento,
+    formaPagamento,
+    contaUtilizada,
     fechamento: invoice.fechamento,
     vencimento: invoice.vencimento,
     fluxoId
@@ -874,6 +920,8 @@ function payCardInvoice(invoice, payload) {
     valor: total,
     data: dataPagamento,
     status: 'Pago',
+    formaPagamento,
+    contaUtilizada,
     origem: 'cartao',
     origemId: invoice.id,
     cartaoId: invoice.cartaoId
@@ -914,6 +962,8 @@ function syncPaidCardInvoices(invoices) {
         valor: invoice.total,
         data: stored.dataPagamento || invoice.vencimento,
         status: 'Pago',
+        formaPagamento: stored.formaPagamento || '',
+        contaUtilizada: stored.contaUtilizada || '',
         origem: 'cartao',
         origemId: invoice.id,
         cartaoId: invoice.cartaoId

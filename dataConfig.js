@@ -38,7 +38,7 @@ export const resources = {
   fluxo: {
     title: 'Lancamento',
     plural: 'Fluxo',
-    searchFields: ['descricao', 'tipo', 'categoria', 'status'],
+    searchFields: ['descricao', 'tipo', 'categoria', 'formaPagamento', 'contaUtilizada', 'status'],
     dateField: 'data',
     moneyField: 'valor',
     fields: [
@@ -47,6 +47,8 @@ export const resources = {
       { name: 'categoria', label: 'Categoria', type: 'text' },
       { name: 'valor', label: 'Valor', type: 'number', required: true },
       { name: 'data', label: 'Data', type: 'date' },
+      { name: 'formaPagamento', label: 'Forma de pagamento', type: 'select', options: ['Pix', 'Transferencia', 'Dinheiro', 'Cartao', 'Boleto', 'Debito automatico', 'Outro'] },
+      { name: 'contaUtilizada', label: 'Conta utilizada', type: 'text' },
       { name: 'status', label: 'Status', type: 'select', options: ['Pendente', 'Pago'], required: true }
     ],
     columns: [
@@ -55,6 +57,8 @@ export const resources = {
       { key: 'categoria', label: 'Categoria' },
       { key: 'valor', label: 'Valor', format: 'currency' },
       { key: 'data', label: 'Data', format: 'date' },
+      { key: 'formaPagamento', label: 'Forma pagamento' },
+      { key: 'contaUtilizada', label: 'Conta utilizada' },
       { key: 'status', label: 'Status', format: 'badge' }
     ]
   },
@@ -99,6 +103,8 @@ export const resources = {
       { name: 'origem', label: 'Origem', type: 'text' },
       { name: 'valor', label: 'Valor', type: 'number', required: true },
       { name: 'data', label: 'Data', type: 'date' },
+      { name: 'formaPagamento', label: 'Forma de pagamento', type: 'select', options: ['Pix', 'Transferencia', 'Dinheiro', 'Cartao', 'Boleto', 'Debito automatico', 'Outro'] },
+      { name: 'contaUtilizada', label: 'Conta utilizada', type: 'text' },
       { name: 'status', label: 'Status', type: 'select', options: ['Pendente', 'Realizado', 'Cancelado'], required: true },
       { name: 'obs', label: 'Observacoes', type: 'textarea', full: true }
     ],
@@ -114,7 +120,7 @@ export const resources = {
   cp: {
     title: 'Conta a pagar',
     plural: 'Contas a Pagar',
-    searchFields: ['fornecedor', 'categoria', 'status'],
+    searchFields: ['fornecedor', 'categoria', 'formaPagamento', 'contaUtilizada', 'status'],
     dateField: 'vencimento',
     moneyField: 'valor',
     fields: [
@@ -123,6 +129,9 @@ export const resources = {
       { name: 'valor', label: 'Valor', type: 'number', required: true },
       { name: 'vencimento', label: 'Vencimento', type: 'date' },
       { name: 'status', label: 'Status', type: 'select', options: ['Pendente', 'Pago', 'Atrasado'], required: true },
+      { name: 'formaPagamento', label: 'Forma de pagamento', type: 'select', options: ['Pix', 'Transferencia', 'Dinheiro', 'Cartao', 'Boleto', 'Debito automatico', 'Outro'] },
+      { name: 'dataPagamento', label: 'Data de pagamento', type: 'date' },
+      { name: 'contaUtilizada', label: 'Conta utilizada', type: 'text' },
       { name: 'obs', label: 'Observacoes', type: 'textarea', full: true }
     ],
     columns: [
@@ -131,6 +140,8 @@ export const resources = {
       { key: 'valor', label: 'Valor', format: 'currency' },
       { key: 'vencimento', label: 'Vencimento', format: 'date' },
       { key: 'dataPagamento', label: 'Pago em', format: 'date' },
+      { key: 'formaPagamento', label: 'Forma pagamento' },
+      { key: 'contaUtilizada', label: 'Conta utilizada' },
       { key: 'status', label: 'Status', format: 'badge' }
     ]
   }

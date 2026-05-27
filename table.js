@@ -4,6 +4,7 @@ export function buildFilters(resourceKey, config, items, state, onChange) {
   const host = document.getElementById(`${resourceKey}-filters`);
   const statusValues = unique(items.map(item => item.status).filter(Boolean));
   const categoryValues = unique(items.map(item => item.categoria).filter(Boolean));
+  const paymentValues = unique(items.map(item => item.formaPagamento).filter(Boolean));
 
   host.innerHTML = `
     <label class="filter-field">
@@ -25,6 +26,7 @@ export function buildFilters(resourceKey, config, items, state, onChange) {
       <span>Data final</span>
       <input type="date" data-filter="to" value="${escapeHTML(state.to || '')}">
     </label>
+    ${['fluxo', 'cp'].includes(resourceKey) ? paymentFilter(state, paymentValues) : ''}
     ${resourceKey === 'fluxo' ? fluxoExtraFilters(state, categoryValues) : ''}
   `;
 
@@ -48,11 +50,12 @@ export function applyFilters(items, config, state, globalTerm = '') {
     const queryOk = matchesSearch(item, state.query || '') && matchesSearch(item, globalTerm || '');
     const statusOk = !state.status || item.status === state.status;
     const categoryOk = !state.category || item.categoria === state.category;
+    const paymentOk = !state.formaPagamento || item.formaPagamento === state.formaPagamento;
     const itemType = item.tipo === 'Saída' ? 'Saida' : item.tipo;
     const typeOk = !state.tipo || itemType === state.tipo;
     const fromOk = !state.from || !dateValue || dateValue >= state.from;
     const toOk = !state.to || !dateValue || dateValue <= state.to;
-    return queryOk && statusOk && categoryOk && typeOk && fromOk && toOk;
+    return queryOk && statusOk && categoryOk && paymentOk && typeOk && fromOk && toOk;
   });
 }
 
@@ -171,5 +174,17 @@ function fluxoExtraFilters(state, categories) {
         `).join('')}
       </div>
     </div>
+  `;
+}
+
+function paymentFilter(state, payments) {
+  return `
+    <label class="filter-field">
+      <span>Forma pagamento</span>
+      <select data-filter="formaPagamento">
+        <option value="">Todas</option>
+        ${payments.map(payment => `<option value="${escapeHTML(payment)}" ${state.formaPagamento === payment ? 'selected' : ''}>${escapeHTML(payment)}</option>`).join('')}
+      </select>
+    </label>
   `;
 }

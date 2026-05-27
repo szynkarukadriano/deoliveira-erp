@@ -84,6 +84,8 @@ function migrateDB(db) {
     cartaoId: Number(fatura.cartaoId || 0),
     total: Number(fatura.total || 0),
     status: fatura.status || 'Aberta',
+    formaPagamento: fatura.formaPagamento || '',
+    contaUtilizada: fatura.contaUtilizada || '',
     fluxoId: fatura.fluxoId || null
   }));
 
@@ -92,6 +94,8 @@ function migrateDB(db) {
     pago: conta.pago ?? conta.status === 'Pago',
     dataPagamento: conta.dataPagamento || '',
     valorPago: Number(conta.valorPago || 0),
+    formaPagamento: conta.formaPagamento || '',
+    contaUtilizada: conta.contaUtilizada || '',
     fluxoId: conta.fluxoId || null
   }));
 
@@ -99,7 +103,15 @@ function migrateDB(db) {
     ...aporte,
     tipoAporte: aporte.tipoAporte || normalizeAporteType(aporte.origem),
     status: aporte.status === 'Confirmado' ? 'Realizado' : aporte.status,
+    formaPagamento: aporte.formaPagamento || '',
+    contaUtilizada: aporte.contaUtilizada || '',
     fluxoId: aporte.fluxoId || null
+  }));
+
+  db.fluxo = db.fluxo.map(item => ({
+    ...item,
+    formaPagamento: item.formaPagamento || '',
+    contaUtilizada: item.contaUtilizada || ''
   }));
 
   return db;
@@ -187,7 +199,7 @@ export function seedIfEmpty() {
 
   DB.fluxo = [
     { id: 201, descricao: 'Comissão recebida', tipo: 'Entrada', categoria: 'Comissões', valor: 32000, data: '2026-05-10', status: 'Pago' },
-    { id: 202, descricao: 'Tráfego pago', tipo: 'Saída', categoria: 'Marketing', valor: 4200, data: '2026-05-18', status: 'Pago' },
+    { id: 202, descricao: 'Trafego pago', tipo: 'Saida', categoria: 'Marketing', valor: 4200, data: '2026-05-18', status: 'Pago', formaPagamento: 'Cartao', contaUtilizada: 'Cartao Operacional' },
     { id: 203, descricao: 'Comissao imobiliaria recebida - Rafael Lima / Jardins Office', tipo: 'Entrada', categoria: 'Vendas', valor: 39000, data: '2026-05-30', status: 'Pago', vendaId: 102 },
     { id: 204, descricao: 'Aporte - Socios', tipo: 'Entrada', categoria: 'Aportes', valor: 60000, data: '2026-05-05', status: 'Realizado', origem: 'aporte', origemId: 401, aporteId: 401 }
   ];
@@ -233,6 +245,8 @@ export function seedIfEmpty() {
       valor: 60000,
       data: '2026-05-05',
       status: 'Realizado',
+      formaPagamento: 'Transferencia',
+      contaUtilizada: 'Conta empresarial',
       fluxoId: 204,
       obs: 'Reserva de caixa'
     }
@@ -249,6 +263,8 @@ export function seedIfEmpty() {
       pago: false,
       dataPagamento: '',
       valorPago: 0,
+      formaPagamento: '',
+      contaUtilizada: '',
       fluxoId: null,
       obs: 'Renovacao mensal'
     }
