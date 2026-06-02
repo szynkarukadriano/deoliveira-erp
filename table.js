@@ -5,6 +5,7 @@ export function buildFilters(resourceKey, config, items, state, onChange) {
   const statusValues = unique(items.map(item => item.status).filter(Boolean));
   const categoryValues = unique(items.map(item => item.categoria).filter(Boolean));
   const paymentValues = unique(items.map(item => item.formaPagamento).filter(Boolean));
+  const dateLabel = config.dateLabel || 'Data';
 
   host.innerHTML = `
     <label class="filter-field">
@@ -19,11 +20,11 @@ export function buildFilters(resourceKey, config, items, state, onChange) {
       </select>
     </label>
     <label class="filter-field">
-      <span>Data inicial</span>
+      <span>${escapeHTML(dateLabel)} inicial</span>
       <input type="date" data-filter="from" value="${escapeHTML(state.from || '')}">
     </label>
     <label class="filter-field">
-      <span>Data final</span>
+      <span>${escapeHTML(dateLabel)} final</span>
       <input type="date" data-filter="to" value="${escapeHTML(state.to || '')}">
     </label>
     ${['fluxo', 'cp'].includes(resourceKey) ? paymentFilter(state, paymentValues) : ''}

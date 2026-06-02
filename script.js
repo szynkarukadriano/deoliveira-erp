@@ -112,7 +112,7 @@ function bindActions() {
   document.querySelectorAll('[data-export]').forEach(button => {
     button.addEventListener('click', () => {
       const key = button.dataset.export;
-      const exported = exportCSV(DB[key], `${key}.csv`);
+      const exported = exportCSV(DB[key], `${key}.csv`, key === 'vendas' ? resources[key]?.columns : null);
       toast(exported ? 'CSV exportado com sucesso' : 'Não há dados para exportar');
     });
   });
@@ -585,7 +585,7 @@ function renderReceivables() {
     <article class="compact-item receivable-item">
       <div>
         <strong>${escapeHTML(venda.cliente)} / ${escapeHTML(venda.empreend)}</strong>
-        <small>Data da Venda: ${dateBR(venda.dataVenda || venda.dtPrev)} - Recebimento previsto: ${dateBR(venda.dtPrev)} - Comissao a receber: ${currency(venda.comissaoImobiliariaValor)}</small>
+        <small>Data da Venda: ${dateBR(venda.dataVenda || venda.dtPrev)} - Data prevista da comissão: ${dateBR(venda.dtPrev)} - Comissão a receber: ${currency(venda.comissaoImobiliariaValor)}</small>
       </div>
       <button class="primary-button" data-receive="${venda.id}">Receber</button>
     </article>

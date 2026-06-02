@@ -4,6 +4,7 @@ export const resources = {
     plural: 'Vendas',
     searchFields: ['cliente', 'empreend', 'corretor', 'status', 'dataVenda', 'dataRecebimento'],
     dateField: 'dataVenda',
+    dateLabel: 'Data da Venda',
     moneyField: 'valor',
     fields: [
       { name: 'dataVenda', label: 'Data da Venda', type: 'date', required: true },
@@ -19,8 +20,8 @@ export const resources = {
       { name: 'impostosGuias', label: 'Impostos e guias', type: 'number' },
       { name: 'caixaEmpresa', label: 'Valor para caixa da empresa', type: 'number', readonly: true },
       { name: 'status', label: 'Status', type: 'select', options: ['Em negociacao', 'Aprovacao de credito', 'Conformidade', 'Assinatura Caixa', 'Registro de imoveis', 'Concluido'], required: true },
-      { name: 'dtPrev', label: 'Data prevista', type: 'date' },
-      { name: 'dataRecebimento', label: 'Data de Recebimento da Comissao', type: 'date', readonly: true },
+      { name: 'dtPrev', label: 'Data prevista da comissão', type: 'date' },
+      { name: 'dataRecebimento', label: 'Data de recebimento da comissão', type: 'date', readonly: true },
       { name: 'obs', label: 'Observacoes', type: 'textarea', full: true }
     ],
     columns: [
@@ -33,9 +34,9 @@ export const resources = {
       { key: 'comissaoCorretorValor', label: 'Corretor', format: 'currency' },
       { key: 'caixaEmpresa', label: 'Caixa empresa', format: 'currency' },
       { key: 'recebimentoStatus', label: 'Recebimento', format: 'badge' },
-      { key: 'dataRecebimento', label: 'Recebido em', format: 'date' },
+      { key: 'dataRecebimento', label: 'Data de recebimento da comissão', format: 'date' },
       { key: 'status', label: 'Status', format: 'badge' },
-      { key: 'dtPrev', label: 'Previsto', format: 'date' }
+      { key: 'dtPrev', label: 'Data prevista da comissão', format: 'date' }
     ]
   },
   fluxo: {

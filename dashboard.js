@@ -41,7 +41,7 @@ export function calcDashboard() {
 export function renderDashboard() {
   const data = calcDashboard();
   document.getElementById('dashboard-cards').innerHTML = `
-    ${metric('Pipeline', currency(data.pipeline), `${DB.vendas.length} vendas por Data da Venda${data.ultimaVenda ? ` - ultima em ${data.ultimaVenda}` : ''}`)}
+    ${metric('Pipeline', currency(data.pipeline), `${DB.vendas.length} vendas por Data da Venda${data.ultimaVenda ? ` - última venda em ${data.ultimaVenda}` : ''}`)}
     ${metric('Comissao recebida', currency(data.comissaoRecebida), 'Parte da imobiliaria sobre os imoveis')}
     ${metric('A receber', currency(data.aReceber), 'Comissoes da imobiliaria ainda nao recebidas')}
     ${metric('Caixa empresa', currency(data.caixaEmpresa), 'Comissao recebida menos corretor, custos e guias')}

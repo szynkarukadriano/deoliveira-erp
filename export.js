@@ -1,15 +1,17 @@
 import { DB } from './storage.js';
 import { currency, dateBR } from './utils.js';
 
-export function exportCSV(data, filename) {
+export function exportCSV(data, filename, columns = null) {
   if (!data.length) {
     return false;
   }
 
-  const keys = Object.keys(data[0]);
+  const exportColumns = columns?.length
+    ? columns.map(column => ({ key: column.key, label: column.label || column.key }))
+    : Object.keys(data[0]).map(key => ({ key, label: key }));
   const csv = [
-    keys.join(','),
-    ...data.map(item => keys.map(key => csvCell(item[key])).join(','))
+    exportColumns.map(column => csvCell(column.label)).join(','),
+    ...data.map(item => exportColumns.map(column => csvCell(item[column.key])).join(','))
   ].join('\n');
 
   const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
@@ -63,7 +65,7 @@ export async function exportPDF() {
   doc.text('Vendas recentes por Data da Venda', 12, 98);
   doc.setFontSize(9);
   sortVendasByData(DB.vendas).slice(0, 8).forEach((item, index) => {
-    doc.text(`${dateBR(item.dataVenda || item.dtPrev || item.dataRecebimento)} - ${item.cliente || '-'} - ${currency(item.valor)} - ${item.status || '-'}`, 12, 108 + index * 7);
+    doc.text(`Data da Venda: ${dateBR(item.dataVenda || item.dtPrev || item.dataRecebimento)} | Data prevista da comissão: ${dateBR(item.dtPrev)} | Data de recebimento da comissão: ${dateBR(item.dataRecebimento)} | ${item.cliente || '-'}`, 12, 108 + index * 7);
   });
 
   doc.setFontSize(12);
