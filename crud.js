@@ -115,6 +115,7 @@ function normalizePayload(resourceKey, payload) {
 
   return {
     ...payload,
+    dataVenda: payload.dataVenda || payload.dtPrev || '',
     valor,
     comissaoImobiliariaPct,
     comissaoImobiliariaValor,

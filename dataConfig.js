@@ -2,10 +2,11 @@ export const resources = {
   vendas: {
     title: 'Venda',
     plural: 'Vendas',
-    searchFields: ['cliente', 'empreend', 'corretor', 'status'],
-    dateField: 'dtPrev',
+    searchFields: ['cliente', 'empreend', 'corretor', 'status', 'dataVenda', 'dataRecebimento'],
+    dateField: 'dataVenda',
     moneyField: 'valor',
     fields: [
+      { name: 'dataVenda', label: 'Data da Venda', type: 'date', required: true },
       { name: 'cliente', label: 'Cliente', type: 'text', required: true },
       { name: 'empreend', label: 'Empreendimento', type: 'text', required: true },
       { name: 'corretor', label: 'Corretor', type: 'text' },
@@ -19,9 +20,11 @@ export const resources = {
       { name: 'caixaEmpresa', label: 'Valor para caixa da empresa', type: 'number', readonly: true },
       { name: 'status', label: 'Status', type: 'select', options: ['Em negociacao', 'Aprovacao de credito', 'Conformidade', 'Assinatura Caixa', 'Registro de imoveis', 'Concluido'], required: true },
       { name: 'dtPrev', label: 'Data prevista', type: 'date' },
+      { name: 'dataRecebimento', label: 'Data de Recebimento da Comissao', type: 'date', readonly: true },
       { name: 'obs', label: 'Observacoes', type: 'textarea', full: true }
     ],
     columns: [
+      { key: 'dataVenda', label: 'Data da Venda', format: 'date' },
       { key: 'cliente', label: 'Cliente' },
       { key: 'empreend', label: 'Empreendimento' },
       { key: 'corretor', label: 'Corretor' },

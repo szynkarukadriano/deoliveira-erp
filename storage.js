@@ -45,9 +45,11 @@ function migrateDB(db) {
     const recebimentoStatus = venda.recebimentoStatus || (venda.recebido ? 'Recebido' : 'Para receber');
     const recebido = recebimentoStatus === 'Recebido';
     const status = migrateVendaStatus(venda.status);
+    const dataVenda = venda.dataVenda || venda.dtPrev || venda.dataRecebimento || '';
 
     return {
       ...venda,
+      dataVenda,
       status,
       comissaoImobiliariaPct,
       comissaoImobiliariaValor,
@@ -193,6 +195,7 @@ export function seedIfEmpty() {
       caixaEmpresa: 13000,
       recebimentoStatus: 'Para receber',
       recebido: false,
+      dataVenda: '2026-05-20',
       dataRecebimento: '',
       fluxoId: null,
       status: 'Em negociacao',
@@ -214,6 +217,7 @@ export function seedIfEmpty() {
       caixaEmpresa: 7900,
       recebimentoStatus: 'Recebido',
       recebido: true,
+      dataVenda: '2026-05-24',
       dataRecebimento: '2026-05-30',
       valorRecebido: 39000,
       fluxoId: 203,

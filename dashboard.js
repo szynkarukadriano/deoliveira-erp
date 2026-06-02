@@ -27,6 +27,7 @@ export function calcDashboard() {
     saidas,
     saldo,
     pipeline,
+    ultimaVenda: getLatestSaleDate(),
     comissaoRecebida,
     comissoesCorretores,
     custosVendas,
@@ -40,7 +41,7 @@ export function calcDashboard() {
 export function renderDashboard() {
   const data = calcDashboard();
   document.getElementById('dashboard-cards').innerHTML = `
-    ${metric('Pipeline', currency(data.pipeline), `${DB.vendas.length} vendas cadastradas`)}
+    ${metric('Pipeline', currency(data.pipeline), `${DB.vendas.length} vendas por Data da Venda${data.ultimaVenda ? ` - ultima em ${data.ultimaVenda}` : ''}`)}
     ${metric('Comissao recebida', currency(data.comissaoRecebida), 'Parte da imobiliaria sobre os imoveis')}
     ${metric('A receber', currency(data.aReceber), 'Comissoes da imobiliaria ainda nao recebidas')}
     ${metric('Caixa empresa', currency(data.caixaEmpresa), 'Comissao recebida menos corretor, custos e guias')}
@@ -132,4 +133,13 @@ function getCaixaEmpresa(item) {
     - Number(item.impostosGuias || 0);
 
   return Number(item.caixaEmpresa ?? fallback);
+}
+
+function getLatestSaleDate() {
+  const date = DB.vendas
+    .map(item => item.dataVenda || item.dtPrev || item.dataRecebimento || '')
+    .filter(Boolean)
+    .sort((a, b) => b.localeCompare(a))[0];
+
+  return date ? dateBR(date) : '';
 }

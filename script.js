@@ -574,7 +574,7 @@ function renderReceivables() {
 
   const pending = DB.vendas
     .filter(venda => venda.recebimentoStatus !== 'Recebido')
-    .sort((a, b) => String(a.dtPrev || '').localeCompare(String(b.dtPrev || '')));
+    .sort((a, b) => String(b.dataVenda || b.dtPrev || '').localeCompare(String(a.dataVenda || a.dtPrev || '')));
 
   if (!pending.length) {
     host.innerHTML = '<div class="empty">Nenhuma venda pendente de recebimento.</div>';
@@ -585,7 +585,7 @@ function renderReceivables() {
     <article class="compact-item receivable-item">
       <div>
         <strong>${escapeHTML(venda.cliente)} / ${escapeHTML(venda.empreend)}</strong>
-        <small>Previsto: ${dateBR(venda.dtPrev)} - Comissao a receber: ${currency(venda.comissaoImobiliariaValor)}</small>
+        <small>Data da Venda: ${dateBR(venda.dataVenda || venda.dtPrev)} - Recebimento previsto: ${dateBR(venda.dtPrev)} - Comissao a receber: ${currency(venda.comissaoImobiliariaValor)}</small>
       </div>
       <button class="primary-button" data-receive="${venda.id}">Receber</button>
     </article>

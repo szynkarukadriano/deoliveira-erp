@@ -60,10 +60,17 @@ export async function exportPDF() {
   lines.forEach((line, index) => doc.text(line, 12, 34 + index * 8));
 
   doc.setFontSize(12);
-  doc.text('Proximas contas', 12, 98);
+  doc.text('Vendas recentes por Data da Venda', 12, 98);
+  doc.setFontSize(9);
+  sortVendasByData(DB.vendas).slice(0, 8).forEach((item, index) => {
+    doc.text(`${dateBR(item.dataVenda || item.dtPrev || item.dataRecebimento)} - ${item.cliente || '-'} - ${currency(item.valor)} - ${item.status || '-'}`, 12, 108 + index * 7);
+  });
+
+  doc.setFontSize(12);
+  doc.text('Proximas contas', 12, 172);
   doc.setFontSize(9);
   DB.cp.slice(0, 12).forEach((item, index) => {
-    doc.text(`${dateBR(item.vencimento)} - ${item.fornecedor} - ${currency(item.valor)} - ${item.status}`, 12, 108 + index * 7);
+    doc.text(`${dateBR(item.vencimento)} - ${item.fornecedor} - ${currency(item.valor)} - ${item.status}`, 12, 182 + index * 7);
   });
 
   doc.save('relatorio-erp-de-oliveira.pdf');
@@ -73,4 +80,14 @@ export async function exportPDF() {
 function csvCell(value) {
   const text = String(value ?? '').replaceAll('"', '""');
   return /[",\n]/.test(text) ? `"${text}"` : text;
+}
+
+function sortVendasByData(items) {
+  return [...items].sort((a, b) => {
+    const dateA = String(a.dataVenda || a.dtPrev || a.dataRecebimento || '');
+    const dateB = String(b.dataVenda || b.dtPrev || b.dataRecebimento || '');
+    const dateCompare = dateB.localeCompare(dateA);
+    if (dateCompare !== 0) return dateCompare;
+    return Number(b.id || 0) - Number(a.id || 0);
+  });
 }
